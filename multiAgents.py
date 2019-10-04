@@ -17,6 +17,7 @@ from game import Directions
 import random, util
 
 from game import Agent
+from numpy import empty
 
 class ReflexAgent(Agent):
     """
@@ -38,18 +39,29 @@ class ReflexAgent(Agent):
         Just like in the previous project, getAction takes a GameState and returns
         some Directions.X for some X in the set {North, South, West, East, Stop}
         """
-        # Collect legal moves and successor states
-        legalMoves = gameState.getLegalActions()
-
-        # Choose one of the best actions
-        scores = [self.evaluationFunction(gameState, action) for action in legalMoves]
-        bestScore = max(scores)
-        bestIndices = [index for index in range(len(scores)) if scores[index] == bestScore]
-        chosenIndex = random.choice(bestIndices) # Pick randomly among the best
-
         "Add more of your code here if you want to"
-
-        return legalMoves[chosenIndex]
+        # get all the legal moves
+        legalMoves = gameState.getLegalActions()
+        
+        #find the scores using successor function for all the moves.
+        scores = []
+        for legalMove in legalMoves:
+            scores.append(self.evaluationFunction(gameState, legalMove))
+        
+        #print("pacman current position:",gameState.getPacmanPosition())
+        #print("food positions:", gameState.getFood().asList())
+        #print("dists ",scores, legalMoves)
+        
+        #get the max score and the corresponding moves.
+        maxScore = max(scores)
+        possibleMoves = []
+        for i in range(len(scores)):
+            if scores[i] ==  maxScore:
+                possibleMoves.append(i)
+                
+        #return any one move which results in max score.
+        chosenMove = random.choice(possibleMoves) 
+        return legalMoves[chosenMove]
 
     def evaluationFunction(self, currentGameState, action):
         """
@@ -67,14 +79,34 @@ class ReflexAgent(Agent):
         to create a masterful evaluation function.
         """
         # Useful information you can extract from a GameState (pacman.py)
+        if action is "Stop":
+            return -99999
+        #print(currentGameState.getPacmanPosition())
         successorGameState = currentGameState.generatePacmanSuccessor(action)
         newPos = successorGameState.getPacmanPosition()
-        newFood = successorGameState.getFood()
+        foodStates = currentGameState.getFood()
         newGhostStates = successorGameState.getGhostStates()
-        newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        ghostpos = []
+        for newGhostState in newGhostStates:
+            ghostpos.append(newGhostState.getPosition())
+        #print(newFood)
+        if(newPos in ghostpos):
+            return -99999
+        #print(newPos)
+        #print(newFood.asList())
+        #print("new pos is", newPos, type(newPos), " with action", action)
+        #print("food positions",newFood.asList())
+        min_dist = 99999
+        dist = 0
+        for foodlocation in foodStates.asList():
+            dist = manhattanDistance(foodlocation,newPos)
+            if(dist<min_dist):
+                min_dist = dist
+
+        return -min_dist
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        #return successorGameState.getScore() - ghostscore
 
 def scoreEvaluationFunction(currentGameState):
     """
