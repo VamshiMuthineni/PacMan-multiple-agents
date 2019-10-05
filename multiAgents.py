@@ -13,11 +13,12 @@
 
 
 from util import manhattanDistance
-from game import Directions
+from game import Directions, Agent
 import random, util
 
 from game import Agent
 from numpy import empty
+from pacman import GameState
 
 class ReflexAgent(Agent):
     """
@@ -161,7 +162,40 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        
+        print("Total agents",gameState.getNumAgents())
+        print("depth",self.depth)
+        print("legal actions of pacman",gameState.getLegalActions(0))
+        
+        successors = []
+        
+        for action in gameState.getLegalActions(0):
+            print("successors", gameState.generateSuccessor(0,action).getPacmanPosition())
+            
+        
+        return gameState.getLegalActions(0)[self.returnEvaluations(0, gameState)]
+        
+        #util.raiseNotDefined()
+    
+    def returnEvaluations(self, agentid, gameState):
+        successors = []
+        for action in gameState.getLegalActions(agentid):
+            successors.append(gameState.generateSuccessor(agentid,action))
+        evals = []            
+        if agentid == 3:
+            evals_final = []
+            for successor in successors:
+                evals_final.append(self.evaluationFunction(successor))
+            return min(evals_final)
+        
+        for successor in successors:
+            evals.append(self.returnEvaluations(agentid+1, successor))
+        
+        if agentid!=0:
+            return min(evals)
+        else:
+            return evals.index(max(evals))
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
