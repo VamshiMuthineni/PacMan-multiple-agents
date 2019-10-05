@@ -186,12 +186,16 @@ class MinimaxAgent(MultiAgentSearchAgent):
             evals_final = []
             for successor in successors:
                 evals_final.append(self.evaluationFunction(successor))
+            if len(evals)==0:
+                evals_final.append(self.evaluationFunction(gameState))
             return min(evals_final)
         
         for successor in successors:
             evals.append(self.returnEvaluations(agentid+1, successor))
         
         if agentid!=0:
+            if len(evals)==0:
+                evals.append(self.evaluationFunction(gameState))
             return min(evals)
         else:
             return evals.index(max(evals))
