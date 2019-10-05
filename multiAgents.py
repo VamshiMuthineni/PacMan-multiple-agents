@@ -19,6 +19,7 @@ import random, util
 from game import Agent
 from numpy import empty
 from pacman import GameState
+from Carbon.Events import btnState
 
 class ReflexAgent(Agent):
     """
@@ -171,11 +172,11 @@ class MinimaxAgent(MultiAgentSearchAgent):
 #             print("successors", gameState.generateSuccessor(0,action).getPacmanPosition())
             
         
-        return gameState.getLegalActions(0)[self.returnEvaluations((0, 0), gameState, gameState.getNumAgents(), self.depth)]
+        return gameState.getLegalActions(0)[self.getMoveIndex((0, 0), gameState, gameState.getNumAgents(), self.depth)]
         
         #util.raiseNotDefined()
     
-    def returnEvaluations(self, agentid, gameState, totalAgents, depth):
+    def getMoveIndex(self, agentid, gameState, totalAgents, depth):
         
         if (agentid[1] == depth) or gameState.isWin() or gameState.isLose() or gameState.getLegalActions(agentid[0])==0:
             return self.evaluationFunction(gameState)
@@ -184,9 +185,9 @@ class MinimaxAgent(MultiAgentSearchAgent):
         for action in gameState.getLegalActions(agentid[0]):
             successor = gameState.generateSuccessor(agentid[0],action)
             if agentid[0] == totalAgents-1:
-                evals.append(self.returnEvaluations((0,agentid[1]+1), successor, totalAgents, depth))
+                evals.append(self.getMoveIndex((0,agentid[1]+1), successor, totalAgents, depth))
             else:
-                evals.append(self.returnEvaluations((agentid[0]+1,agentid[1]), successor, totalAgents, depth))
+                evals.append(self.getMoveIndex((agentid[0]+1,agentid[1]), successor, totalAgents, depth))
         
         if agentid[0] != 0:
             return min(evals)
@@ -205,7 +206,54 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
           Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        alpha = -999999
+        beta = 999999
+        value, action = self.getPrunedMove(gameState, alpha, beta, (0, 0), gameState.getNumAgents(), self.depth)
+        return action
+        #util.raiseNotDefined()
+        
+        
+    def getPrunedMove(self, gameState, alpha, beta, agentid, totalAgents, depth):
+        if agentid[0] == totalAgents:
+            agentid = (0,agentid[1] + 1)
+            
+        if (agentid[1] == depth) or gameState.isWin() or gameState.isLose() or gameState.getLegalActions(agentid[0])==0:
+            return self.evaluationFunction(gameState), None
+        
+        if agentid[0]%totalAgents==0:
+            return self.getMax(gameState, alpha, beta, agentid, totalAgents, depth)
+        else:
+            return self.getMin(gameState, alpha, beta, agentid, totalAgents, depth)
+        
+            
+    
+    def getMax(self, gameState, alpha, beta, agentid, totalAgents, depth):
+        v = -99999
+        move = None
+        for action in gameState.getLegalActions(agentid[0]):
+            successor = gameState.generateSuccessor(agentid[0], action)
+            current_val,pos = self.getPrunedMove(successor, alpha, beta, (agentid[0]+1,agentid[1]), totalAgents, depth)
+            if v < current_val:
+                move = action
+            v = max(v, current_val)
+            if v > beta:
+                return v, move
+            alpha = max(alpha, v)
+        return v,move
+    
+    def getMin(self, gameState, alpha, beta, agentid, totalAgents, depth):
+        v = 99999
+        move = None
+        for action in gameState.getLegalActions(agentid[0]):
+            successor = gameState.generateSuccessor(agentid[0], action)
+            current_val,pos = self.getPrunedMove(successor, alpha, beta, (agentid[0]+1,agentid[1]), totalAgents, depth)
+            if v > current_val:
+                move = action
+            v = min(current_val, v)
+            if v < alpha:
+                return v, move
+            beta = min(beta,v)
+        return v, move
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
