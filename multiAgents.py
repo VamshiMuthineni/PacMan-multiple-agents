@@ -163,43 +163,37 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         
-        print("Total agents",gameState.getNumAgents())
-        print("depth",self.depth)
-        print("legal actions of pacman",gameState.getLegalActions(0))
-        
-        successors = []
-        
-        for action in gameState.getLegalActions(0):
-            print("successors", gameState.generateSuccessor(0,action).getPacmanPosition())
+#         print("Total agents",gameState.getNumAgents())
+#         print("depth",self.depth)
+#         print("legal actions of pacman",gameState.getLegalActions(0))
+                
+#         for action in gameState.getLegalActions(0):
+#             print("successors", gameState.generateSuccessor(0,action).getPacmanPosition())
             
         
-        return gameState.getLegalActions(0)[self.returnEvaluations(0, gameState)]
+        return gameState.getLegalActions(0)[self.returnEvaluations((0, 0), gameState, gameState.getNumAgents(), self.depth)]
         
         #util.raiseNotDefined()
     
-    def returnEvaluations(self, agentid, gameState):
-        successors = []
-        for action in gameState.getLegalActions(agentid):
-            successors.append(gameState.generateSuccessor(agentid,action))
-        evals = []            
-        if agentid == 3:
-            evals_final = []
-            for successor in successors:
-                evals_final.append(self.evaluationFunction(successor))
-            if len(evals)==0:
-                evals_final.append(self.evaluationFunction(gameState))
-            return min(evals_final)
+    def returnEvaluations(self, agentid, gameState, totalAgents, depth):
         
-        for successor in successors:
-            evals.append(self.returnEvaluations(agentid+1, successor))
+        if (agentid[1] == depth) or gameState.isWin() or gameState.isLose() or gameState.getLegalActions(agentid[0])==0:
+            return self.evaluationFunction(gameState)
+
+        evals = []
+        for action in gameState.getLegalActions(agentid[0]):
+            successor = gameState.generateSuccessor(agentid[0],action)
+            if agentid[0] == totalAgents-1:
+                evals.append(self.returnEvaluations((0,agentid[1]+1), successor, totalAgents, depth))
+            else:
+                evals.append(self.returnEvaluations((agentid[0]+1,agentid[1]), successor, totalAgents, depth))
         
-        if agentid!=0:
-            if len(evals)==0:
-                evals.append(self.evaluationFunction(gameState))
+        if agentid[0] != 0:
             return min(evals)
+        elif agentid[0] == 0 and agentid[1] != 0:
+            return max(evals)
         else:
             return evals.index(max(evals))
-
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
